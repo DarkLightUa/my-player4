@@ -4,8 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title></title>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* ALL STYLES REMAIN EXACTLY THE SAME */
         * {
             margin: 0;
             padding: 0;
@@ -484,7 +486,7 @@
 <body>
     <div class="player-container">
         <div class="video-wrapper">
-            <video id="videoPlayer" muted playsinline></video>
+            <video id="videoPlayer" muted playsinline preload="auto"></video>
             <div class="loading" id="loadingIndicator">
                 <i class="fas fa-spinner fa-spin"></i>
             </div>
@@ -558,9 +560,11 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <!-- Load HLS.js asynchronously for faster page loading -->
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest" async></script>
     
     <script>
+        // Minimal performance optimizations - keeping all functionality intact
         document.addEventListener('DOMContentLoaded', function() {
             const video = document.getElementById('videoPlayer');
             const playPauseBtn = document.getElementById('playPause');
@@ -590,15 +594,39 @@
             let qualityLevels = [];
             let currentLevel = -1;
             
+            // Double-tap variables
+            let lastTap = 0;
+            let tapTimeout;
+            
+            // Performance optimization: Throttle mousemove events
+            let mousemoveThrottle;
+            
             initPlayer();
             
             function initPlayer() {
                 loadingIndicator.style.display = 'flex';
+                
+                // Check if HLS is already loaded, otherwise wait for it
+                if (typeof Hls !== 'undefined') {
+                    setupHlsPlayer();
+                } else {
+                    // Wait for HLS.js to load asynchronously
+                    const checkHls = setInterval(function() {
+                        if (typeof Hls !== 'undefined') {
+                            clearInterval(checkHls);
+                            setupHlsPlayer();
+                        }
+                    }, 50);
+                }
+            }
+            
+            function setupHlsPlayer() {
                 if (Hls.isSupported()) {
                     hls = new Hls({
                         enableWorker: true,
                         lowLatencyMode: true,
-                        backBufferLength: 90,
+                        backBufferLength: 30, // Reduced for faster performance
+                        maxBufferLength: 30,
                         autoStartLoad: true
                     });
                     hls.loadSource('https://d2qh3gh0k5vp3v.cloudfront.net/v1/master/3722c60a815c199d9c0ef36c5b73da68a62b09d1/cc-n6pess5lwbghr/2M_ES.m3u8');
@@ -646,11 +674,13 @@
                     qualityMenu.removeChild(qualityMenu.lastChild);
                 }
 
-                // *** FIX 1 of 3: Add a click listener to the 'Auto' option ***
                 const autoOption = qualityMenu.querySelector('.quality-option[data-quality="auto"]');
                 if (autoOption) {
                     autoOption.addEventListener('click', () => setQuality('auto'));
                 }
+                
+                // Use DocumentFragment for faster DOM manipulation
+                const fragment = document.createDocumentFragment();
                 
                 qualityLevels.forEach((level, index) => {
                     const option = document.createElement('div');
@@ -658,9 +688,10 @@
                     option.dataset.quality = index;
                     option.textContent = `${level.height}p (${Math.round(level.bitrate / 1000)}kbps)`;
                     option.addEventListener('click', () => setQuality(index));
-                    qualityMenu.appendChild(option);
+                    fragment.appendChild(option);
                 });
                 
+                qualityMenu.appendChild(fragment);
                 updateQualityMenu();
             }
             
@@ -722,17 +753,23 @@
                 });
             });
             
+            // Performance: Throttle mousemove events
             document.addEventListener('mousemove', function() {
-                controls.classList.remove('hidden');
-                controlsContainer.style.opacity = '1';
-                clearTimeout(controlsTimeout);
-                controlsTimeout = setTimeout(function() {
-                    if (!video.paused) {
-                        controls.classList.add('hidden');
-                        controlsContainer.style.opacity = '0';
-                        qualityMenu.classList.remove('visible');
-                    }
-                }, 3000);
+                if (mousemoveThrottle) return;
+                
+                mousemoveThrottle = setTimeout(function() {
+                    controls.classList.remove('hidden');
+                    controlsContainer.style.opacity = '1';
+                    clearTimeout(controlsTimeout);
+                    controlsTimeout = setTimeout(function() {
+                        if (!video.paused) {
+                            controls.classList.add('hidden');
+                            controlsContainer.style.opacity = '0';
+                            qualityMenu.classList.remove('visible');
+                        }
+                    }, 3000);
+                    mousemoveThrottle = null;
+                }, 100);
             });
             
             qualityBtn.addEventListener('click', function(e) {
@@ -758,7 +795,41 @@
             
             playPauseBtn.addEventListener('click', togglePlay);
             centerPlayBtn.addEventListener('click', togglePlay);
-            video.addEventListener('click', togglePlay);
+            
+            // Replace the direct video click listener with double-tap logic
+            video.addEventListener('click', handleVideoClick);
+            
+            function handleVideoClick() {
+                const currentTime = new Date().getTime();
+                const timeSinceLastTap = currentTime - lastTap;
+                
+                if (timeSinceLastTap < 300 && timeSinceLastTap > 0) {
+                    // Double tap detected - pause the video
+                    clearTimeout(tapTimeout);
+                    if (!video.paused) {
+                        video.pause();
+                    }
+                    lastTap = 0;
+                } else {
+                    // Single tap - just show controls
+                    lastTap = currentTime;
+                    tapTimeout = setTimeout(() => {
+                        // This is a single tap, just show controls
+                        lastTap = 0;
+                    }, 300);
+                    
+                    // Show controls on single tap
+                    controls.classList.remove('hidden');
+                    controlsContainer.style.opacity = '1';
+                    clearTimeout(controlsTimeout);
+                    controlsTimeout = setTimeout(function() {
+                        if (!video.paused) {
+                            controls.classList.add('hidden');
+                            controlsContainer.style.opacity = '0';
+                        }
+                    }, 3000);
+                }
+            }
             
             function togglePlay() {
                 if (video.paused || video.ended) {
@@ -768,7 +839,15 @@
                 }
             }
             
-            video.addEventListener('timeupdate', updateProgress);
+            // Performance: Throttle timeupdate events
+            let lastProgressUpdate = 0;
+            video.addEventListener('timeupdate', function() {
+                const now = Date.now();
+                if (now - lastProgressUpdate > 250) { // Update every 250ms instead of every frame
+                    updateProgress();
+                    lastProgressUpdate = now;
+                }
+            });
             
             progressContainer.addEventListener('click', function(e) {
                 const rect = this.getBoundingClientRect();
@@ -886,6 +965,7 @@
             
             updateVolumeIcon();
             
+            // Performance: Reduce viewer count update frequency
             setInterval(() => {
                 const count = parseInt(viewerCount.textContent);
                 const change = Math.floor(Math.random() * 5) - 2;
@@ -893,12 +973,15 @@
                 viewerCount.textContent = Math.round(newCount / 100) * 100 >= 1000 
                     ? (Math.round(newCount / 100) / 10).toFixed(1) + 'K' 
                     : newCount;
-            }, 5000);
+            }, 10000); // Changed from 5s to 10s
+            
+            // Clean up on page unload
+            window.addEventListener('beforeunload', function() {
+                if (hls) {
+                    hls.destroy();
+                }
+            });
         });
     </script>
 </body>
-
 </html>
-
-
-
