@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        /* ALL STYLES REMAIN EXACTLY THE SAME */
+        
         * {
             margin: 0;
             padding: 0;
@@ -560,11 +560,11 @@
         </div>
     </div>
 
-    <!-- Load HLS.js asynchronously for faster page loading -->
+    
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest" async></script>
     
     <script>
-        // Minimal performance optimizations - keeping all functionality intact
+        
         document.addEventListener('DOMContentLoaded', function() {
             const video = document.getElementById('videoPlayer');
             const playPauseBtn = document.getElementById('playPause');
@@ -594,11 +594,11 @@
             let qualityLevels = [];
             let currentLevel = -1;
             
-            // Double-tap variables
+            
             let lastTap = 0;
             let tapTimeout;
             
-            // Performance optimization: Throttle mousemove events
+            
             let mousemoveThrottle;
             
             initPlayer();
@@ -606,11 +606,11 @@
             function initPlayer() {
                 loadingIndicator.style.display = 'flex';
                 
-                // Check if HLS is already loaded, otherwise wait for it
+                
                 if (typeof Hls !== 'undefined') {
                     setupHlsPlayer();
                 } else {
-                    // Wait for HLS.js to load asynchronously
+                   
                     const checkHls = setInterval(function() {
                         if (typeof Hls !== 'undefined') {
                             clearInterval(checkHls);
@@ -625,7 +625,7 @@
                     hls = new Hls({
                         enableWorker: true,
                         lowLatencyMode: true,
-                        backBufferLength: 30, // Reduced for faster performance
+                        backBufferLength: 30, 
                         maxBufferLength: 30,
                         autoStartLoad: true
                     });
@@ -679,7 +679,7 @@
                     autoOption.addEventListener('click', () => setQuality('auto'));
                 }
                 
-                // Use DocumentFragment for faster DOM manipulation
+                
                 const fragment = document.createDocumentFragment();
                 
                 qualityLevels.forEach((level, index) => {
@@ -753,7 +753,7 @@
                 });
             });
             
-            // Performance: Throttle mousemove events
+            
             document.addEventListener('mousemove', function() {
                 if (mousemoveThrottle) return;
                 
@@ -796,7 +796,7 @@
             playPauseBtn.addEventListener('click', togglePlay);
             centerPlayBtn.addEventListener('click', togglePlay);
             
-            // Replace the direct video click listener with double-tap logic
+            
             video.addEventListener('click', handleVideoClick);
             
             function handleVideoClick() {
@@ -804,21 +804,21 @@
                 const timeSinceLastTap = currentTime - lastTap;
                 
                 if (timeSinceLastTap < 300 && timeSinceLastTap > 0) {
-                    // Double tap detected - pause the video
+                    
                     clearTimeout(tapTimeout);
                     if (!video.paused) {
                         video.pause();
                     }
                     lastTap = 0;
                 } else {
-                    // Single tap - just show controls
+                    
                     lastTap = currentTime;
                     tapTimeout = setTimeout(() => {
-                        // This is a single tap, just show controls
+                       
                         lastTap = 0;
                     }, 300);
                     
-                    // Show controls on single tap
+                    
                     controls.classList.remove('hidden');
                     controlsContainer.style.opacity = '1';
                     clearTimeout(controlsTimeout);
@@ -839,11 +839,11 @@
                 }
             }
             
-            // Performance: Throttle timeupdate events
+            
             let lastProgressUpdate = 0;
             video.addEventListener('timeupdate', function() {
                 const now = Date.now();
-                if (now - lastProgressUpdate > 250) { // Update every 250ms instead of every frame
+                if (now - lastProgressUpdate > 250) { 
                     updateProgress();
                     lastProgressUpdate = now;
                 }
@@ -965,7 +965,7 @@
             
             updateVolumeIcon();
             
-            // Performance: Reduce viewer count update frequency
+           
             setInterval(() => {
                 const count = parseInt(viewerCount.textContent);
                 const change = Math.floor(Math.random() * 5) - 2;
@@ -973,9 +973,9 @@
                 viewerCount.textContent = Math.round(newCount / 100) * 100 >= 1000 
                     ? (Math.round(newCount / 100) / 10).toFixed(1) + 'K' 
                     : newCount;
-            }, 10000); // Changed from 5s to 10s
+            }, 10000); 
             
-            // Clean up on page unload
+            
             window.addEventListener('beforeunload', function() {
                 if (hls) {
                     hls.destroy();
@@ -985,3 +985,4 @@
     </script>
 </body>
 </html>
+
