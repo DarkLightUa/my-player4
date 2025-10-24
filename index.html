@@ -51,52 +51,32 @@
             object-fit: contain;
         }
         
-        .live-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(231, 76, 60, 0.85);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 3px;
-            font-size: 12px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            z-index: 1001;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-        }
-        
-        .live-badge::before {
-            content: "";
-            width: 8px;
-            height: 8px;
-            background: white;
-            border-radius: 50%;
-            display: inline-block;
-        }
-        
         .viewer-count {
             position: absolute;
             top: 15px;
-            right: 85px;
-            background: rgba(0, 0, 0, 0.6);
+            right: 15px; /* Adjusted position */
+            background: rgba(0, 0, 0, 0.4); /* Made more transparent */
             color: white;
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 12px;
+            padding: 5px 10px; /* Adjusted padding */
+            border-radius: 5px; /* Simplified border-radius */
+            font-size: 13px; /* Slightly increased font size */
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             z-index: 1001;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
             font-weight: 500;
+            transition: opacity 0.3s ease; /* Added for smooth fade on fullscreen */
         }
         
+        /* New rule: Hide viewer count in fullscreen for better UX */
+        :fullscreen .viewer-count,
+        :-webkit-full-screen .viewer-count {
+            opacity: 0;
+            pointer-events: none;
+        }
+
         .controls-container {
             position: absolute;
             bottom: 0;
@@ -280,21 +260,7 @@
             display: none;
             max-width: 80%;
         }
-        
-        .title-overlay {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            font-size: 16px;
-            font-weight: 500;
-            background: rgba(0, 0, 0, 0.5);
-            padding: 6px 12px;
-            border-radius: 4px;
-            z-index: 1001;
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
-        }
-        
+
         .center-play-btn {
             position: absolute;
             top: 50%;
@@ -433,12 +399,8 @@
                 font-size: 12px;
             }
             
-            .title-overlay {
-                font-size: 14px;
-            }
-            
             .viewer-count {
-                right: 75px;
+                right: 15px; /* Adjusted position */
             }
         }
         
@@ -450,22 +412,10 @@
             .quality-selector {
                 display: none;
             }
-            
-            .title-overlay {
-                font-size: 13px;
-                top: 10px;
-                left: 10px;
-            }
-            
-            .live-badge {
-                top: 10px;
-                right: 10px;
-                font-size: 11px;
-            }
-            
+
             .viewer-count {
                 top: 10px;
-                right: 65px;
+                right: 10px; /* Adjusted position */
                 font-size: 11px;
             }
             
@@ -499,8 +449,7 @@
                 </button>
             </div>
             
-            <div class="title-overlay"></div>
-            <div class="live-badge">LIVE</div>
+            <!-- title-overlay and live-badge have been removed -->
             <div class="viewer-count">
                 <i class="fas fa-users"></i> <span id="viewerCount">1.2K</span>
             </div>
@@ -985,5 +934,3 @@
     </script>
 </body>
 </html>
-
-
