@@ -5,7 +5,7 @@
     <title>Live Stream</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* RESET & LAYOUT */
+
         html, body {
             margin: 0;
             padding: 0;
@@ -15,24 +15,23 @@
             overflow: hidden;
         }
 
-        /* FLEX CONTAINER TO CENTER VIDEO */
+
         body {
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        /* PLAYER BOX */
+
         #player-container {
             width: 100%;
             height: 100%;
             max-width: 100vw;
-            /* Ensures 16:9 aspect ratio is respected if needed, 
-               but 100% fills the iframe better */
+
             position: relative;
         }
 
-        /* JW Player internal overrides to ensure fit */
+
         .jwplayer {
             width: 100% !important;
             height: 100% !important;
@@ -41,34 +40,34 @@
 </head>
 <body>
 
-    <!-- Player Container -->
+
     <div id="player-container"></div>
 
-    <!-- JW Player Library -->
+
     <script src="https://content.jwplatform.com/libraries/IDzF9Zmk.js"></script>
 
     <script>
-        // CONFIGURATION
+
         const STREAM_URL = "https://ev-fuj-dxb-cdn-edge2.aws.playco.com/live/eds/2M_Monde/DASH/2M_Monde.mpd";
         const AUTH_URL = "https://devsite.forjamorocco.workers.dev/"; 
 
         async function initPlayer() {
             try {
-                // 1. Fetch Keys
+
                 const response = await fetch(AUTH_URL);
                 if (!response.ok) throw new Error("Auth Failed");
                 
                 const drmData = await response.json();
 
-                // 2. Setup Player
+
                 jwplayer("player-container").setup({
                     file: STREAM_URL,
                     type: "dash",
                     width: "100%",
                     height: "100%",
-                    stretching: "uniform", // 'uniform' adds black bars, 'exactfit' stretches
+                    stretching: "uniform", 
                     autostart: true,
-                    mute: false, // Try unmuted, but browser might block it
+                    mute: false, 
                     controls: true,
                     
                     drm: {
@@ -87,7 +86,7 @@
 
             } catch (error) {
                 console.error("Initialization failed");
-                // Silently fail or show a generic error if desired
+
             }
         }
 
@@ -96,3 +95,4 @@
 
 </body>
 </html>
+
