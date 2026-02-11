@@ -2,91 +2,75 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Live TV</title>
+    <title>Live Stream</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* RESET */
+        /* RESET & LAYOUT */
         html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
             background-color: #000;
-            font-family: Arial, sans-serif;
+            overflow: hidden;
         }
 
-        /* CENTER THE PLAYER */
+        /* FLEX CONTAINER TO CENTER VIDEO */
         body {
             display: flex;
             justify-content: center;
-            align-items: center; /* Vertical Center */
-            overflow: hidden; /* No scrollbars */
+            align-items: center;
         }
 
-        /* PLAYER CONTAINER */
+        /* PLAYER BOX */
         #player-container {
             width: 100%;
             height: 100%;
-            /* Max width restriction for very wide monitors if you want */
-            max-width: 100vw; 
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            max-width: 100vw;
+            /* Ensures 16:9 aspect ratio is respected if needed, 
+               but 100% fills the iframe better */
+            position: relative;
         }
 
-        /* LOADING MESSAGE */
-        #loader {
-            position: absolute;
-            color: white;
-            font-size: 16px;
-            z-index: 10;
+        /* JW Player internal overrides to ensure fit */
+        .jwplayer {
+            width: 100% !important;
+            height: 100% !important;
         }
     </style>
 </head>
 <body>
 
-    <div id="loader">Securely Loading Stream...</div>
+    <!-- Player Container -->
     <div id="player-container"></div>
 
     <!-- JW Player Library -->
     <script src="https://content.jwplatform.com/libraries/IDzF9Zmk.js"></script>
 
     <script>
-        // --- CONFIGURATION ---
+        // CONFIGURATION
         const STREAM_URL = "https://ev-fuj-dxb-cdn-edge2.aws.playco.com/live/eds/2M_Monde/DASH/2M_Monde.mpd";
-        // Update this with your Cloudflare Worker URL
         const AUTH_URL = "https://devsite.forjamorocco.workers.dev/"; 
 
         async function initPlayer() {
-            const loader = document.getElementById('loader');
-
             try {
-                // 1. FETCH KEYS FROM WORKER
-                // This keeps keys out of the source code
+                // 1. Fetch Keys
                 const response = await fetch(AUTH_URL);
+                if (!response.ok) throw new Error("Auth Failed");
                 
-                if (!response.ok) {
-                    throw new Error("Authorization Failed");
-                }
-
                 const drmData = await response.json();
 
-                // Validate we got keys
-                if (!drmData.keyId || !drmData.key) {
-                    throw new Error("Invalid License Data");
-                }
-
-                // 2. SETUP JW PLAYER
-                // We inject the keys dynamically
+                // 2. Setup Player
                 jwplayer("player-container").setup({
                     file: STREAM_URL,
                     type: "dash",
                     width: "100%",
                     height: "100%",
-                    stretching: "uniform", // Centers video, maintains aspect ratio (No crop)
+                    stretching: "uniform", // 'uniform' adds black bars, 'exactfit' stretches
                     autostart: true,
+                    mute: false, // Try unmuted, but browser might block it
                     controls: true,
-                    logo: { hide: true }, // Hide JW Logo if license permits
                     
-                    // DRM CONFIGURATION
                     drm: {
                         clearkey: {
                             keyId: drmData.keyId,
@@ -94,26 +78,19 @@
                         }
                     },
 
-                    // ERROR HANDLING
                     events: {
-                        onReady: function() {
-                            loader.style.display = 'none'; // Hide loader text
-                            console.log("Player Ready");
-                        },
                         onError: function(e) {
                             console.error("Player Error:", e.message);
-                            loader.innerText = "Error: " + e.message;
                         }
                     }
                 });
 
             } catch (error) {
-                console.error("Setup Failed:", error);
-                loader.innerText = "Playback Error: " + error.message;
+                console.error("Initialization failed");
+                // Silently fail or show a generic error if desired
             }
         }
 
-        // Start the process
         window.addEventListener('DOMContentLoaded', initPlayer);
     </script>
 
