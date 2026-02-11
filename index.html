@@ -2,225 +2,120 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Live TV Player</title>
+    <title>Live TV</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Shaka Player CSS -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/controls.min.css">
-    
     <style>
-        :root {
-            --shaka-control-bar-background: rgba(0, 0, 0, 0.7);
-            --shaka-seek-bar-color: #ff0000;
-            --shaka-text-color: #ffffff;
-        }
-
-        body, html {
+        /* RESET */
+        html, body {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
             background-color: #000;
-            overflow: hidden; /* Prevent iframe scrollbars */
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: Arial, sans-serif;
         }
 
-        /* 
-         * Responsive Container Strategy 
-         * Keeps video centered and respects 16:9 within available space
-         */
-        #player-wrapper {
+        /* CENTER THE PLAYER */
+        body {
             display: flex;
             justify-content: center;
-            align-items: center;
-            width: 100vw;
-            height: 100vh;
+            align-items: center; /* Vertical Center */
+            overflow: hidden; /* No scrollbars */
         }
 
-        /* The actual Shaka UI container */
-        .video-container {
-            width: 100%;
-            max-width: 100%; 
-            height: 100%;
-            aspect-ratio: 16/9; /* Modern CSS aspect ratio */
-            margin: 0 auto;
-            position: relative;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
-        }
-
-        /* Fallback for very wide screens (Ultra-wide monitors) */
-        @media (min-aspect-ratio: 16/9) {
-            .video-container {
-                height: 100vh;
-                width: auto;
-            }
-        }
-
-        /* Fallback for tall screens (Mobile portrait) */
-        @media (max-aspect-ratio: 16/9) {
-            .video-container {
-                width: 100vw;
-                height: auto;
-            }
-        }
-
-        /* Video element sizing */
-        video {
+        /* PLAYER CONTAINER */
+        #player-container {
             width: 100%;
             height: 100%;
-            object-fit: contain; /* Ensures no cropping */
+            /* Max width restriction for very wide monitors if you want */
+            max-width: 100vw; 
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
 
-        /* Custom Loading Spinner */
-        #loading-spinner {
+        /* LOADING MESSAGE */
+        #loader {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10;
-            display: none;
             color: white;
-            font-size: 1.2rem;
-            text-shadow: 0 0 5px black;
-        }
-        
-        /* Hide Shaka's big play button if desired, or style it */
-        .shaka-play-button {
-            border-radius: 50%;
+            font-size: 16px;
+            z-index: 10;
         }
     </style>
 </head>
 <body>
 
-    <div id="player-wrapper">
-        <!-- Shaka UI Container -->
-        <div class="video-container" id="video-container">
-            <video id="video" autoplay></video>
-            <div id="loading-spinner">Buffering...</div>
-        </div>
-    </div>
+    <div id="loader">Securely Loading Stream...</div>
+    <div id="player-container"></div>
 
-    <!-- Load Shaka Player UI Engine (Modular, Latest Stable) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.11/shaka-player.ui.min.js"></script>
+    <!-- JW Player Library -->
+    <script src="https://content.jwplatform.com/libraries/IDzF9Zmk.js"></script>
 
     <script>
-        // CONFIGURATION
-        const STREAM_URL = 'https://ev-fuj-dxb-cdn-edge2.aws.playco.com/live/eds/2M_Monde/DASH/2M_Monde.mpd';
-        
-        // REPLACE THIS URL WITH YOUR CLOUDFLARE WORKER URL
-        const AUTH_ENDPOINT = 'https://devsite.forjamorocco.workers.dev/'; 
+        // --- CONFIGURATION ---
+        const STREAM_URL = "https://ev-fuj-dxb-cdn-edge2.aws.playco.com/live/eds/2M_Monde/DASH/2M_Monde.mpd";
+        // Update this with your Cloudflare Worker URL
+        const AUTH_URL = "https://devsite.forjamorocco.workers.dev/"; 
 
-        async function init() {
-            // Check browser support
-            if (!shaka.Player.isBrowserSupported()) {
-                console.error('Browser not supported!');
-                return;
-            }
+        async function initPlayer() {
+            const loader = document.getElementById('loader');
 
-            const video = document.getElementById('video');
-            const videoContainer = document.getElementById('video-container');
-            const spinner = document.getElementById('loading-spinner');
-
-            // Initialize Player
-            const player = new shaka.Player(video);
-
-            // Initialize UI Overlay
-            const ui = new shaka.ui.Overlay(player, videoContainer, video);
-            
-            // Customize UI controls
-            const config = {
-                'controlPanelElements': ['play_pause', 'mute', 'volume', 'spacer', 'quality', 'fullscreen'],
-                'overflowMenuButtons': ['quality', 'playback_rate', 'captions', 'picture_in_picture'],
-                'seekBarColors': {
-                    base: 'rgba(255, 255, 255, 0.3)',
-                    buffered: 'rgba(255, 255, 255, 0.54)',
-                    played: 'rgb(255, 0, 0)',
-                }
-            };
-            ui.configure(config);
-
-            // Event: Loading Spinner Logic
-            player.addEventListener('buffering', (event) => {
-                spinner.innerText = "Buffering...";
-                spinner.style.display = event.buffering ? 'block' : 'none';
-            });
-
-            // ERROR HANDLING
-            player.addEventListener('error', (event) => {
-                console.error('Error code', event.detail.code, 'object', event.detail);
-                // Auto-recover for network errors
-                if (event.detail.category === shaka.util.Error.Category.NETWORK) {
-                    console.log("Attempting network recovery...");
-                    player.retryStreaming();
-                }
-            });
-
-            // 1. SECURE KEY FETCHING (STRICT)
-            // We fetch the keys from backend before configuring the player.
-            // If this fails, the player stops. No keys are stored in HTML.
-            let clearKeys = {};
             try {
-                const response = await fetch(AUTH_ENDPOINT);
+                // 1. FETCH KEYS FROM WORKER
+                // This keeps keys out of the source code
+                const response = await fetch(AUTH_URL);
                 
                 if (!response.ok) {
-                    throw new Error(`Auth Failed: ${response.status}`);
-                }
-                
-                clearKeys = await response.json();
-
-                // Validation: Ensure the backend actually returned keys
-                if (!clearKeys || Object.keys(clearKeys).length === 0) {
-                     throw new Error("No keys returned from backend");
+                    throw new Error("Authorization Failed");
                 }
 
-            } catch (e) {
-                console.error("CRITICAL: Failed to fetch DRM keys.", e);
-                spinner.innerText = "Authorization Failed";
-                spinner.style.display = 'block';
-                return; // Stop execution immediately.
-            }
+                const drmData = await response.json();
 
-            // 2. PLAYER CONFIGURATION FOR LIVE STREAMS
-            player.configure({
-                drm: {
-                    clearKeys: clearKeys
-                },
-                streaming: {
-                    bufferingGoal: 10, // Seconds of buffer to keep
-                    rebufferingGoal: 2, // Seconds to wait before resuming after buffer empty
-                    jumpLargeGaps: true, // Jump over gaps in timeline
-                    ignoreTextStreamFailures: true, // Don't crash if subtitles fail
-                    lowLatencyMode: true // Optimizes for live edge
-                },
-                manifest: {
-                    dash: {
-                        ignoreMinBufferTime: true, // Trust our config over MPD
-                        autoCorrectDrift: true // Sync live stream time
+                // Validate we got keys
+                if (!drmData.keyId || !drmData.key) {
+                    throw new Error("Invalid License Data");
+                }
+
+                // 2. SETUP JW PLAYER
+                // We inject the keys dynamically
+                jwplayer("player-container").setup({
+                    file: STREAM_URL,
+                    type: "dash",
+                    width: "100%",
+                    height: "100%",
+                    stretching: "uniform", // Centers video, maintains aspect ratio (No crop)
+                    autostart: true,
+                    controls: true,
+                    logo: { hide: true }, // Hide JW Logo if license permits
+                    
+                    // DRM CONFIGURATION
+                    drm: {
+                        clearkey: {
+                            keyId: drmData.keyId,
+                            key: drmData.key
+                        }
                     },
-                    retryParameters: {
-                        maxAttempts: 5,
-                        baseDelay: 1000,
-                        backoffFactor: 2,
-                        fuzzFactor: 0.5,
-                        timeout: 10000
-                    }
-                }
-            });
 
-            // 3. LOAD STREAM
-            try {
-                await player.load(STREAM_URL);
-                console.log('The video has now been loaded!');
-                
-                // Optional: Ensure audio starts enabled if allowed by browser policies
-                video.volume = 0.8;
-                
-            } catch (e) {
-                console.error('Error loading video:', e);
+                    // ERROR HANDLING
+                    events: {
+                        onReady: function() {
+                            loader.style.display = 'none'; // Hide loader text
+                            console.log("Player Ready");
+                        },
+                        onError: function(e) {
+                            console.error("Player Error:", e.message);
+                            loader.innerText = "Error: " + e.message;
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Setup Failed:", error);
+                loader.innerText = "Playback Error: " + error.message;
             }
         }
 
-        document.addEventListener('DOMContentLoaded', init);
+        // Start the process
+        window.addEventListener('DOMContentLoaded', initPlayer);
     </script>
+
 </body>
 </html>
-
