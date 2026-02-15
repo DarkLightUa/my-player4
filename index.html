@@ -2,10 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Live Stream</title>
+    <title>PL</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
     <style>
-
+        /* RESET & LAYOUT */
         html, body {
             margin: 0;
             padding: 0;
@@ -13,25 +14,39 @@
             height: 100%;
             background-color: #000;
             overflow: hidden;
+            font-family: sans-serif;
+            user-select: none; 
+            -webkit-user-select: none;
         }
 
-
+        /* FLEX CONTAINER TO CENTER VIDEO */
         body {
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-
+        /* PLAYER BOX */
         #player-container {
             width: 100%;
             height: 100%;
             max-width: 100vw;
-
             position: relative;
         }
 
+        /* ERROR MESSAGE STYLE */
+        #error-msg {
+            color: #fff;
+            text-align: center;
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.2rem;
+        }
 
+        /* Player internal overrides */
         .jwplayer {
             width: 100% !important;
             height: 100% !important;
@@ -40,28 +55,80 @@
 </head>
 <body>
 
-
     <div id="player-container"></div>
+    <div id="error-msg">Access Denied</div>
 
-
+    <!-- Player Library -->
     <script src="https://content.jwplatform.com/libraries/IDzF9Zmk.js"></script>
 
     <script>
 
-        const STREAM_URL = "https://ev-fuj-dxb-cdn-edge2.aws.playco.com/live/eds/2M_Monde/DASH/2M_Monde.mpd";
-        const AUTH_URL = "https://devsite.forjamorocco.workers.dev/"; 
+        
+
+        const _0x1a = "aHR0cHM6Ly9ldi1mdWotZHhiLWNkbi1lZGdlMi5hd3MucGxheWNvLmNvbS9saXZlL2Vkcy8yTV9Nb25kZS9EQVNILzJNX01vbmRlLm1wZA=="; // MPD
+        const _0x2b = "aHR0cHM6Ly9kZXZzaXRlLmZvcmphbW9yb2Njby53b3JrZXJzLmRldi8="; // Worker
+
+
+        function _decode(str) {
+            return atob(str);
+        }
+
+
+        (function() {
+
+            if (window.self === window.top) {
+                document.body.innerHTML = ""; 
+
+                throw new Error("Direct Access Denied");
+            }
+
+
+            const allowedDomains = ["forjamaroc.com", "www.forjamaroc.com"];
+            const referrer = document.referrer || ""; 
+            
+
+            const isAllowed = allowedDomains.some(domain => referrer.includes(domain));
+
+
+            if (referrer && !isAllowed) {
+                 document.body.innerHTML = "";
+                 console.error("Unauthorized Embed");
+                 throw new Error("Access Denied");
+            }
+        })();
+
+
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+       
+        document.addEventListener('keydown', function(e) {
+            if (
+                e.key === 'F12' || 
+                (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) || 
+                (e.ctrlKey && e.key === 'U')
+            ) {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // --- 2. PLAYER INITIALIZATION ---
 
         async function initPlayer() {
             try {
+                //URLs at runtime
+                const streamUrl = _decode(_0x1a);
+                const authUrl = _decode(_0x2b);
 
-                const response = await fetch(AUTH_URL);
+                
+                const response = await fetch(authUrl);
                 if (!response.ok) throw new Error("Auth Failed");
                 
                 const drmData = await response.json();
 
-
+                // Setup
                 jwplayer("player-container").setup({
-                    file: STREAM_URL,
+                    file: streamUrl,
                     type: "dash",
                     width: "100%",
                     height: "100%",
@@ -69,6 +136,7 @@
                     autostart: true,
                     mute: false, 
                     controls: true,
+                    logo: { hide: true }, // Hide Logo
                     
                     drm: {
                         clearkey: {
@@ -80,13 +148,16 @@
                     events: {
                         onError: function(e) {
                             console.error("Player Error:", e.message);
+                            
+                            document.getElementById("error-msg").style.display = "block";
+                            document.getElementById("error-msg").innerText = "Stream Unavailable";
                         }
                     }
                 });
 
             } catch (error) {
                 console.error("Initialization failed");
-
+                document.getElementById("error-msg").style.display = "block";
             }
         }
 
@@ -95,4 +166,3 @@
 
 </body>
 </html>
-
