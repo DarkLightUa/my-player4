@@ -48,8 +48,10 @@ logo:{hide:true},
 drm:{clearkey:{keyId:c.keyId,key:c.key}},
 events:{
 onError:function(e){
+// If it still manages to throw a missing segment error, gently seek to live instead of reloading
 if(e.code&&e.code.toString().startsWith("232")){
-this.load({file:_d(_0x1)});this.play();
+this.seek(this.getDuration());
+this.play();
 }else{
 document.getElementById("e").style.display="block";
 }
@@ -59,7 +61,12 @@ onPlay:function(){
 if(this.pt){
 let d=(Date.now()-this.pt)/1000;
 this.pt=null;
-if(d>15){this.load({file:_d(_0x1)});this.play();}
+// Emulate PiP Native Resume: If paused > 12 seconds, skip straight to the live edge natively
+if(d>12){
+const v=document.querySelector('.jw-video');
+if(v)v.play(); // Trigger native HTML5 video play (like PiP)
+this.seek(this.getDuration()); // Snap JW UI to the live edge
+}
 }
 }
 }
