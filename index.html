@@ -14,7 +14,7 @@ body{display:flex;justify-content:center;align-items:center}
 </head>
 <body>
 <div id="p"></div>
-<div id="e">Unavailable</div>
+<div id="e">Stream Unavailable</div>
 <script src="https://content.jwplatform.com/libraries/IDzF9Zmk.js"></script>
 <script>
 const _0x1="aHR0cHM6Ly9ldi1mdWotZHhiLWNkbi1lZGdlMi5hd3MucGxheWNvLmNvbS9saXZlL2Vkcy8yTV9Nb25kZS9EQVNILzJNX01vbmRlLm1wZA==";
@@ -40,10 +40,11 @@ file:_d(_0x1),
 type:"dash",
 width:"100%",
 height:"100%",
-stretching:"fill",
+stretching:"uniform",
 autostart:true,
-mute:false,
+preload:"auto",
 controls:true,
+liveTimeout:0,
 logo:{hide:true},
 drm:{clearkey:{keyId:c.keyId,key:c.key}},
 events:{onError:function(){document.getElementById("e").style.display="block";}}
