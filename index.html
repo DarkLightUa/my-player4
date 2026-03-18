@@ -45,32 +45,16 @@ autostart:true,
 mute:false,
 controls:true,
 logo:{hide:true},
-drm:{clearkey:{keyId:c.keyId,key:c.key}},
-events:{
-onError:function(e){
-// If it still manages to throw a missing segment error, gently seek to live instead of reloading
-if(e.code&&e.code.toString().startsWith("232")){
-this.seek(this.getDuration());
-this.play();
-}else{
-document.getElementById("e").style.display="block";
-}
-},
-onPause:function(){this.pt=Date.now();},
-onPlay:function(){
-if(this.pt){
-let d=(Date.now()-this.pt)/1000;
-this.pt=null;
-// Emulate PiP Native Resume: If paused > 12 seconds, skip straight to the live edge natively
-if(d>12){
-const v=document.querySelector('.jw-video');
-if(v)v.play(); // Trigger native HTML5 video play (like PiP)
-this.seek(this.getDuration()); // Snap JW UI to the live edge
-}
-}
-}
-}
+drm:{clearkey:{keyId:c.keyId,key:c.key}}
 });
+document.getElementById("p").addEventListener('click',function(e){
+const t=e.target.closest('.jw-icon-playback')||e.target.closest('.jw-display-icon-container')||e.target.closest('.jw-media');
+if(t){
+e.stopPropagation();
+const v=document.querySelector('.jw-video');
+if(v){if(v.paused)v.play();else v.pause();}
+}
+},true);
 }catch(e){document.getElementById("e").style.display="block";}
 }
 window.addEventListener('DOMContentLoaded',i);
