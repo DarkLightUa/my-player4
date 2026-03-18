@@ -2,66 +2,51 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>0</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="robots" content="noindex, nofollow">
 <style>
 html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden;font-family:sans-serif;user-select:none;-webkit-user-select:none}
 body{display:flex;justify-content:center;align-items:center}
-#p{width:100%;height:100%;max-width:100vw;position:relative}
-#e{color:#fff;text-align:center;display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.2rem}
+#p{width:100%;height:100%;position:relative}
+#e{color:#fff;text-align:center;display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.2rem;z-index:99}
 .jwplayer{width:100%!important;height:100%!important}
 </style>
 </head>
 <body>
 <div id="p"></div>
-<div id="e">Unavailable</div>
+<div id="e">Stream Unavailable</div>
 <script src="https://content.jwplatform.com/libraries/IDzF9Zmk.js"></script>
 <script>
 const _0x1="aHR0cHM6Ly9ldi1mdWotZHhiLWNkbi1lZGdlMi5hd3MucGxheWNvLmNvbS9saXZlL2Vkcy8yTV9Nb25kZS9EQVNILzJNX01vbmRlLm1wZA==";
 const _0x2="aHR0cHM6Ly9kZXZzaXRlLmZvcmphbW9yb2Njby53b3JrZXJzLmRldi8=";
-const _0x3="x9K#mP2";
+const _0x3=String.fromCharCode(120,57,75,35,109,80,50);
 function _d(s){return atob(s);}
 function _x(t,k){let r='';for(let i=0;i<t.length;i++){r+=String.fromCharCode(t.charCodeAt(i)^k.charCodeAt(i%k.length));}return r;}
 (function(){
 if(window.self===window.top){document.body.innerHTML="";throw new Error("X1");}
 const a=["forjamaroc.com","www.forjamaroc.com"];
 const r=document.referrer||"";
-const i=a.some(d=>r.includes(d));
-if(r&&!i){document.body.innerHTML="";throw new Error("X2");}
+if(r&&!a.some(d=>r.includes(d))){document.body.innerHTML="";throw new Error("X2");}
 })();
 document.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('keydown',e=>{if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'||e.key==='C'))||(e.ctrlKey&&e.key==='U')){e.preventDefault();return false;}});
 async function i(){
 try{
-const s=_d(_0x1);
-const u=_d(_0x2);
-const f=await fetch(u);
+const f=await fetch(_d(_0x2));
 if(!f.ok)throw new Error("X3");
-const t=await f.text();
-const c=JSON.parse(_x(_d(t),_0x3));
+const c=JSON.parse(_x(_d(await f.text()),_0x3));
 jwplayer("p").setup({
-file:s,
+file:_d(_0x1),
 type:"dash",
 width:"100%",
 height:"100%",
-stretching:"uniform",
+stretching:"fill",
 autostart:true,
 mute:false,
 controls:true,
 logo:{hide:true},
 drm:{clearkey:{keyId:c.keyId,key:c.key}},
-events:{
-onError:function(){document.getElementById("e").style.display="block";},
-onPause:function(){this.pt=Date.now();},
-onPlay:function(){
-if(this.pt){
-let d=(Date.now()-this.pt)/1000;
-if(d>10){this.seek(this.getDuration());}
-this.pt=null;
-}
-}
-}
+events:{onError:function(){document.getElementById("e").style.display="block";}}
 });
 }catch(e){document.getElementById("e").style.display="block";}
 }
