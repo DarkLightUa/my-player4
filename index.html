@@ -4,77 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="robots" content="noindex, nofollow">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link href="https://cdnjs.cloudflare.com/ajax/libs/video.js/8.23.7/video-js.min.css" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background:#0a0a0a;color:#fff;line-height:1.6;overflow:hidden;height:100vh;width:100vw;user-select:none;-webkit-user-select:none}
-.player-container{position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:1000;display:flex;flex-direction:column}
-.video-wrapper{position:relative;width:100%;height:100%;background-image:url('https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgmRFi0nHGuUTPrZ5tR8sD2sWv1L3Oespy813FQb6uNLUuUqIN5zlOKlfIZj2cGvkEiNXvfvEjj3BeHhYEqz0aVaHpJd8QLFcoqFWNVq35HTtUJ5zfy0692k3vRQDZhUde5ll0Q_zYF75WND1Qw7Kb5LIprh9axSw8NNmM65vyJvdyJ9QBinhOI-AXAL20J/s1000/Untitled%20design%20(11).gif');background-size:cover;background-position:center}
-#videoPlayer{width:100%;height:100%;object-fit:contain;background:transparent}
-.viewer-count{position:absolute;top:15px;right:15px;background:rgba(0,0,0,0.4);color:#fff;padding:5px 10px;border-radius:5px;font-size:13px;display:flex;align-items:center;gap:6px;z-index:1001;backdrop-filter:blur(5px);font-weight:500;transition:opacity 0.3s}
-:fullscreen .viewer-count{opacity:0;pointer-events:none}
-.controls-container{position:absolute;bottom:0;left:0;width:100%;background:linear-gradient(to top,rgba(0,0,0,0.85),transparent);padding:15px;transition:opacity 0.3s;z-index:1002}
-.controls-container.hidden{opacity:0;pointer-events:none}
-.controls-row{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
-.left-controls,.right-controls{display:flex;align-items:center;gap:12px}
-.control-btn{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:all 0.2s}
-.control-btn:hover{background:rgba(255,255,255,0.15);transform:scale(1.1)}
-.time-display{font-size:13px;color:#ff4444;font-weight:bold;white-space:nowrap;display:flex;align-items:center;gap:5px}
-.live-dot{width:8px;height:8px;background:#ff4444;border-radius:50%;animation:pulse 1.5s infinite}
-@keyframes pulse{0%{opacity:1}50%{opacity:0.4}100%{opacity:1}}
-.volume-container{display:flex;align-items:center;gap:8px;position:relative}
-.volume-slider-container{position:relative;width:70px;height:18px;display:flex;align-items:center}
-.volume-slider{width:100%;height:4px;-webkit-appearance:none;background:rgba(255,255,255,0.2);border-radius:2px;outline:none;position:relative;z-index:2}
-.volume-slider::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#3498db;cursor:pointer}
-.loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:14px;background:rgba(0,0,0,0.7);padding:10px 20px;border-radius:20px;z-index:1001;display:none;align-items:center;gap:8px}
-.error{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#ff4444;font-size:14px;background:rgba(0,0,0,0.9);padding:15px;border-radius:8px;text-align:center;z-index:1001;display:none;max-width:80%}
-.center-play-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.5);border:none;color:#fff;font-size:42px;width:70px;height:70px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1001;transition:all 0.2s;opacity:0;pointer-events:none}
-.center-play-btn.visible{opacity:1;pointer-events:auto}
-.center-play-btn:hover{background:rgba(0,0,0,0.7);transform:translate(-50%,-50%) scale(1.1)}
-.vjs-tech{object-fit:contain}
-@media (max-width:768px){.control-btn{font-size:16px;width:34px;height:34px}.volume-slider-container{width:50px}}
+html,body{margin:0;padding:0;width:100%;height:100%;background:#000;overflow:hidden;font-family:sans-serif;user-select:none;-webkit-user-select:none}
+body{display:flex;justify-content:center;align-items:center}
+#p{width:100%;height:100%;position:relative}
+#e{color:#fff;text-align:center;display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:1.2rem;z-index:99}
+.jwplayer{width:100%!important;height:100%!important}
 </style>
 </head>
 <body>
-
-<div class="player-container" id="playerContainer">
-    <div class="video-wrapper" id="videoWrapper">
-        <video id="videoPlayer" class="video-js" playsinline></video>
-        <div class="viewer-count"><i class="fas fa-eye"></i> <span>Live Stream</span></div>
-        <div class="loading" id="loading"><i class="fas fa-spinner fa-spin"></i> Buffering...</div>
-        <div class="error" id="errorMsg"></div>
-        <button class="center-play-btn visible" id="centerPlay"><i class="fas fa-play"></i></button>
-        <div class="controls-container" id="controls">
-            <div class="controls-row">
-                <div class="left-controls">
-                    <button class="control-btn" id="playPauseBtn"><i class="fas fa-play"></i></button>
-                    <div class="volume-container">
-                        <button class="control-btn" id="muteBtn"><i class="fas fa-volume-up"></i></button>
-                        <div class="volume-slider-container">
-                            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="1" step="0.01" value="1">
-                        </div>
-                    </div>
-                    <div class="time-display"><div class="live-dot"></div> LIVE</div>
-                </div>
-                <div class="right-controls">
-                    <button class="control-btn" id="fullscreenBtn"><i class="fas fa-expand"></i></button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/8.23.7/video.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/videojs-contrib-eme/5.4.1/videojs-contrib-eme.min.js"></script>
-
+<div id="p"></div>
+<div id="e">Stream Unavailable</div>
+<script src="https://content.jwplatform.com/libraries/IDzF9Zmk.js"></script>
 <script>
 const _0x1="aHR0cHM6Ly9ldi1mdWotZHhiLWNkbi1lZGdlMi5hd3MucGxheWNvLmNvbS9saXZlL2Vkcy8yTV9Nb25kZS9EQVNILzJNX01vbmRlLm1wZA==";
 const _0x2="aHR0cHM6Ly9kZXZzaXRlLmZvcmphbW9yb2Njby53b3JrZXJzLmRldi8=";
 const _0x3=String.fromCharCode(120,57,75,35,109,80,50);
 function _d(s){return atob(s);}
 function _x(t,k){let r='';for(let i=0;i<t.length;i++){r+=String.fromCharCode(t.charCodeAt(i)^k.charCodeAt(i%k.length));}return r;}
-function _h2b(h){let s='';for(let i=0;i<h.length;i+=2)s+=String.fromCharCode(parseInt(h.substr(i,2),16));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');}
 (function(){
 if(window.self===window.top){document.body.innerHTML="";throw new Error("X1");}
 const a=["forjamaroc.com","www.forjamaroc.com"];
@@ -83,90 +30,43 @@ if(r&&!a.some(d=>r.includes(d))){document.body.innerHTML="";throw new Error("X2"
 })();
 document.addEventListener('contextmenu',e=>e.preventDefault());
 document.addEventListener('keydown',e=>{if(e.key==='F12'||(e.ctrlKey&&e.shiftKey&&(e.key==='I'||e.key==='J'||e.key==='C'))||(e.ctrlKey&&e.key==='U')){e.preventDefault();return false;}});
-
-const playBtn=document.getElementById('playPauseBtn');
-const centerPlay=document.getElementById('centerPlay');
-const muteBtn=document.getElementById('muteBtn');
-const volSlider=document.getElementById('volumeSlider');
-const fullBtn=document.getElementById('fullscreenBtn');
-const cont=document.getElementById('playerContainer');
-const load=document.getElementById('loading');
-const err=document.getElementById('errorMsg');
-const cBar=document.getElementById('controls');
-let hideTimer;
-
-async function init(){
-    try{
-        const f=await fetch(_d(_0x2));
-        if(!f.ok)throw new Error("X3");
-        const c=JSON.parse(_x(_d(await f.text()),_0x3));
-        const jwk=new TextEncoder().encode(JSON.stringify({keys:[{kty:'oct',kid:_h2b(c.keyId),k:_h2b(c.key)}],type:'temporary'}));
-
-        const player=videojs('videoPlayer',{
-            controls:false,
-            autoplay:true,
-            preload:'auto',
-            fluid:false,
-            fill:true
-        });
-
-        player.eme();
-        player.src({
-            src:_d(_0x1),
-            type:'application/dash+xml',
-            keySystems:{
-                'org.w3.clearkey':{
-                    getLicense:function(o,m,cb){cb(null,jwk);}
-                }
-            }
-        });
-
-        function tPlay(){player.paused()?player.play():player.pause();}
-        playBtn.onclick=centerPlay.onclick=tPlay;
-        
-        muteBtn.onclick=()=>{
-            player.muted(!player.muted());
-            muteBtn.innerHTML=player.muted()||player.volume()===0?'<i class="fas fa-volume-mute"></i>':'<i class="fas fa-volume-up"></i>';
-            volSlider.value=player.muted()?0:player.volume();
-        };
-        
-        volSlider.oninput=(e)=>{
-            player.volume(e.target.value);
-            player.muted(player.volume()===0);
-            muteBtn.innerHTML=player.muted()?'<i class="fas fa-volume-mute"></i>':player.volume()<0.5?'<i class="fas fa-volume-down"></i>':'<i class="fas fa-volume-up"></i>';
-        };
-
-        fullBtn.onclick=()=>{
-            player.isFullscreen()?player.exitFullscreen():player.requestFullscreen();
-        };
-
-        player.on('play',()=>{
-            playBtn.innerHTML='<i class="fas fa-pause"></i>';
-            centerPlay.classList.remove('visible');
-            if(player.liveTracker&&player.liveTracker.isLive()){player.liveTracker.seekToLiveEdge();}
-        });
-        player.on('pause',()=>{
-            playBtn.innerHTML='<i class="fas fa-play"></i>';
-            centerPlay.classList.add('visible');
-        });
-        player.on('waiting',()=>load.style.display='flex');
-        player.on('playing',()=>load.style.display='none');
-        player.on('error',()=>{err.innerText="Stream Unavailable";err.style.display="block";});
-        player.on('fullscreenchange',()=>{
-            fullBtn.innerHTML=player.isFullscreen()?'<i class="fas fa-compress"></i>':'<i class="fas fa-expand"></i>';
-        });
-
-        cont.onmousemove=()=>{
-            cBar.classList.remove('hidden');
-            clearTimeout(hideTimer);
-            if(!player.paused()){hideTimer=setTimeout(()=>cBar.classList.add('hidden'),2500);}
-        };
-    }catch(e){
-        err.innerText="Stream Unavailable";
-        err.style.display="block";
-    }
+async function i(){
+try{
+const f=await fetch(_d(_0x2));
+if(!f.ok)throw new Error("X3");
+const c=JSON.parse(_x(_d(await f.text()),_0x3));
+jwplayer("p").setup({
+file:_d(_0x1),
+type:"dash",
+width:"100%",
+height:"100%",
+stretching:"uniform",
+autostart:true,
+mute:false,
+controls:true,
+logo:{hide:true},
+drm:{clearkey:{keyId:c.keyId,key:c.key}},
+events:{
+onError:function(e){
+if(e.code&&e.code.toString().startsWith("232")){
+this.load({file:_d(_0x1)});this.play();
+}else{
+document.getElementById("e").style.display="block";
 }
-window.addEventListener('DOMContentLoaded',init);
+},
+onPause:function(){this.pt=Date.now();},
+onPlay:function(){
+if(this.pt){
+let d=(Date.now()-this.pt)/1000;
+this.pt=null;
+if(d>15){this.load({file:_d(_0x1)});this.play();}
+}
+}
+}
+});
+}catch(e){document.getElementById("e").style.display="block";}
+}
+window.addEventListener('DOMContentLoaded',i);
 </script>
 </body>
 </html>
